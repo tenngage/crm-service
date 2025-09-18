@@ -5,6 +5,7 @@ from src.db.base import engine
 import src.models
 from src.api.auth import router
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with engine.begin() as conn:

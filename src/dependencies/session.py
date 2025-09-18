@@ -1,5 +1,6 @@
 from src.db.base import SessionLocal
 
+
 async def get_db():
     async with SessionLocal() as session:
         try:

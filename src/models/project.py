@@ -1,7 +1,7 @@
 from src.db.base_class import Base
 from sqlalchemy import String, Text, DateTime, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -17,8 +17,11 @@ class Project(Base):
     description: Mapped[str] = mapped_column(Text)
     status: Mapped[str] = mapped_column(default="active")
     budget: Mapped[float]
-    deadline: Mapped[datetime] = mapped_column(DateTime)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    deadline: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=datetime.now(timezone.utc)
+    )
 
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     client_id: Mapped[int] = mapped_column(ForeignKey("clients.id"))
