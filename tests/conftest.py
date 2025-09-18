@@ -43,3 +43,21 @@ async def get_test_db(test_db_engine):
     async with test_async_session() as session:
         yield session
         await session.rollback()
+
+
+@pytest_asyncio.fixture
+async def test_user_data():
+    return {
+        "email": "string@gmail.com",
+        "username": "string",
+        "password": "string321"
+    }
+
+
+@pytest_asyncio.fixture
+async def register_test_user(get_test_db, test_user_data):
+    from src.services.user_services import register
+    from src.schemas.user_schemas import UserRegister
+
+    result = await register(get_test_db, UserRegister(**test_user_data))
+    return result

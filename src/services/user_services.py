@@ -4,6 +4,7 @@ from fastapi import status, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from src.schemas.token_schemas import Token
 from src.models.user import User
 from src.core.exceptions import WrongCredentialsException
@@ -67,6 +68,8 @@ async def login(
     )
     if not user:
         raise WrongCredentialsException()
+
+    # Creating access token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         {"sub": user.username},
