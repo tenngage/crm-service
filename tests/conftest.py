@@ -1,11 +1,15 @@
-import pytest_asyncio
 import os
+
+import pytest_asyncio
+import asyncio
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
     AsyncSession,
     async_sessionmaker
 )
+import redis.asyncio as redis
+
 from src.db.base_class import Base
 import src.models
 
@@ -43,6 +47,15 @@ async def get_test_db(test_db_engine):
     async with test_async_session() as session:
         yield session
         await session.rollback()
+
+    
+@pytest_asyncio.fixture
+async def get_test_redis():
+    test_redis_client = redis.Redis(db=15)
+    try:
+        yield test_redis_client
+    finally:
+        await test_redis_client.aclose()
 
 
 @pytest_asyncio.fixture

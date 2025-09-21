@@ -45,3 +45,32 @@ class TestUserEndpoints:
         result = await login(form_data, get_test_db)
         assert result.access_token
         assert result.token_type == "bearer"
+
+    @pytest.mark.asyncio
+    async def test_logout_user_success(
+        self,
+        get_test_redis,
+        get_test_db,
+        test_user_data,
+    ):
+        from src.services.user_services import login, logout
+        from fastapi.security import OAuth2PasswordRequestForm
+
+        #Mocking form_data
+        form_data = OAuth2PasswordRequestForm(
+            username=test_user_data["username"],
+            password=test_user_data["password"],
+            scope=""
+        )
+
+        # Trying to login
+        login_data = await login(form_data, get_test_db)
+        token = login_data.access_token
+
+        # Logging out
+        result = await logout(token, get_test_redis)
+
+        # Checking if the token in a blacklist
+        blacklisted_token = await get_test_redis.get(f"blacklist:{token}")
+        assert blacklisted_token is not None
+        assert result == {"message": "successfully logged out"}
