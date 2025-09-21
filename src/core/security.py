@@ -1,13 +1,15 @@
-from datetime import timedelta, datetime, timezone
 import os
+from datetime import timedelta, datetime, timezone
 from dotenv import load_dotenv
 
 import jwt
 from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+import redis.asyncio as redis
+
 from src.schemas.token_schemas import TokenData
 from src.models.user import User
 from src.core.exceptions import CredentialsException
@@ -21,6 +23,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+security = HTTPBearer()
 
 
 def get_password_hash(plain_password: str) -> str:
@@ -63,8 +67,12 @@ def create_access_token(
 async def decode_token(
     token: str,
     db: AsyncSession,
+    redis_client: redis.Redis,
 ) -> dict:
     try:
+        blacklist_check = await redis_client.get(f"blacklist:{token}")
+        if blacklist_check:
+            raise CredentialsException()
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
         if username is None:
@@ -78,3 +86,26 @@ async def decode_token(
     if user is None:
         raise CredentialsException()
     return user
+
+
+def get_token_ttl(token: str) -> int:
+
+    # Checking if the token has expired
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"verify_exp": False}
+        )
+        exp_timestamp = payload.get("exp")
+        if not exp_timestamp:
+            return 0
+
+        # Returning remaining time
+        remaining = exp_timestamp - datetime.now(timezone.utc).timestamp()
+        return max(0, int(remaining))
+
+    # Returning 0 if token has expired
+    except InvalidTokenError:
+        return 0

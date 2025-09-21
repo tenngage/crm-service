@@ -4,6 +4,7 @@ from fastapi import status, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import exists, select
 from sqlalchemy.ext.asyncio import AsyncSession
+import redis.asyncio as redis
 
 from src.schemas.token_schemas import Token
 from src.models.user import User
@@ -13,6 +14,7 @@ from src.core.security import (
     authenticate_user,
     create_access_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    get_token_ttl,
 )
 
 
@@ -76,3 +78,15 @@ async def login(
         expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
+
+
+async def logout(
+    token: str,
+    redis_client: redis.Redis,
+):
+    ttl = get_token_ttl(token)
+    if ttl:
+        await redis_client.setex(f"blacklist:{token}", ttl, "1")
+    return {
+        "message": "successfully logged out"
+    }
