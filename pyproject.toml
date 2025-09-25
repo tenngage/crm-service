@@ -3,7 +3,7 @@ name = "crm-service"
 version = "0.1.0"
 description = ""
 authors = [
-    {name = "Your Name",email = "you@example.com"}
+    {name = "tenngage",email = "ibia77804@gmail.com"}
 ]
 readme = "README.md"
 requires-python = ">=3.13"
@@ -22,6 +22,10 @@ dependencies = [
 ]
 
 [tool.poetry]
+name = "crm-service"
+version = "0.1.0"
+description = ""
+authors = ["tenngage <ibia77804@gmail.com>"]
 packages = [
     {include = "api", from = "src"},
     {include = "db", from = "src"}
@@ -33,5 +37,5 @@ pytest = "^8.4.2"
 pytest-asyncio = "^1.2.0"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core>=2.1.2"]
 build-backend = "poetry.core.masonry.api"
