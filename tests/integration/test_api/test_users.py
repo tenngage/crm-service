@@ -74,3 +74,4 @@ class TestUserEndpoints:
         blacklisted_token = await get_test_redis.get(f"blacklist:{token}")
         assert blacklisted_token is not None
         assert result == {"message": "successfully logged out"}
+

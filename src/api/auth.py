@@ -17,6 +17,7 @@ from src.schemas.user_schemas import (
 )
 from src.schemas.token_schemas import Token
 from src.core.security import security, oauth2_scheme
+from src.tasks.email_task import send_email
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -26,7 +27,20 @@ async def register_new_user(
     user_data: UserRegister,
     db: AsyncSession = Depends(get_db),
 ):
-    return await register(db, user_data)
+    result = await register(db, user_data)
+    print(result.email)
+
+    try:
+        task = send_email.delay(
+            user_email=result.email,
+            username=result.username,
+        )
+        print("Task successfully created")
+
+    except Exception as e:
+        print(f"Error during sending welcome email: {e}")
+
+    return result
 
 
 @router.post("/token")
